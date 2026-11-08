@@ -4,13 +4,11 @@ A NPU do lado do hospedeiro: a emulação em inteiros e o driver da placa real.
 As duas usam os MESMOS pesos int8, no formato que o firmware cnn_server.c
 espera (o mesmo esquema do cnn_client.py do TCC):
 
-  entrada   x = pixel // 2                      (0..127, int8)
-  conv      acc = x * w_conv + b_conv  (int32)  ->  y = clip(acc >> 8, 0, 127)   (ReLU)
-  densa     acc = y * w_fc  + b_fc     (int32)  ->  logit = clip(acc >> 8, -128, 127)
+    entrada   x = pixel                            (0..127, int8)
+    conv      acc = x * w_conv + b_conv  (int32)  ->  y = clip((acc + 128) >> 8, 0, 127)   (ReLU)
+    densa     acc = y * w_fc  + b_fc     (int32)  ->  logit = clip((acc + 128) >> 8, -128, 127)
 
-A emulação reproduz essa conta. O arredondamento e a saturação exatos do
-hardware não estão no firmware; aqui o deslocamento é aritmético (para baixo)
-e a saída satura. Por isso o modo --verificar compara as duas, imagem a imagem.
+A emulação reproduz essa conta, incluindo o arredondamento da PPU.
 """
 
 from __future__ import annotations
@@ -33,8 +31,7 @@ CICLOS_CNN_MEDIDOS = 1506      # conv 3x3/2 (4 filtros) + densa 676->10, medido 
 SOBRECARGA_USB_MS = 0.5        # trânsito USB + firmware (artigo: ~0,5 ms)
 DESLOCAMENTO = 8               # a NPU divide o acumulador por 256 na saída de cada camada
 
-CLASSES = ["Camiseta", "Calça", "Suéter", "Vestido", "Casaco",
-           "Sandália", "Camisa", "Tênis", "Bolsa", "Bota"]
+CLASSES = [str(digito) for digito in range(10)]
 
 
 class PlacaNaoRespondeu(Exception):
@@ -100,25 +97,24 @@ class ResultadoNPU:
 class ModeloNPU:
     """Os pesos int8 no formato da placa e a emulação da conta da NPU."""
 
-    def __init__(self, caminho: Path = PASTA_MODELOS / "fashion_int8.npz"):
+    def __init__(self, caminho: Path = PASTA_MODELOS / "digitos_int8.npz"):
         d = np.load(caminho)
         self.w_conv = d["w_conv"].astype(np.int8)     # (4, 9)    filtro x (dy*3+dx)
         self.b_conv = d["b_conv"].astype(np.int32)    # (4,)
         self.w_fc = d["w_fc"].astype(np.int8)         # (10, 676) entrada em channels-last
         self.b_fc = d["b_fc"].astype(np.int32)        # (10,)
-        self.escala_logit = float(d["escala_logit"])  # logit real ~= logit_int8 * escala
 
     def logits_emulados(self, x_q: np.ndarray) -> np.ndarray:
         """x_q: (N, 784) int8 -> (N, 10) logits int8, com a conta da NPU."""
         x = x_q.reshape(-1, 28, 28).astype(np.int64)
         acc1 = im2col_3x3_passo2(x) @ self.w_conv.astype(np.int64).T + self.b_conv   # (N, 169, 4)
-        y1 = np.clip(acc1 >> DESLOCAMENTO, 0, 127)
+        y1 = np.clip((acc1 + (1 << (DESLOCAMENTO - 1))) >> DESLOCAMENTO, 0, 127)
         acc2 = y1.reshape(len(x), -1) @ self.w_fc.astype(np.int64).T + self.b_fc     # (N, 10)
-        return np.clip(acc2 >> DESLOCAMENTO, -128, 127).astype(np.int8)
+        return np.clip((acc2 + (1 << (DESLOCAMENTO - 1))) >> DESLOCAMENTO, -128, 127).astype(np.int8)
 
     def resultado(self, logits: np.ndarray, tempo_medido_ms: float | None = None) -> ResultadoNPU:
         # O softmax não roda na NPU: o hospedeiro calcula só para mostrar a confiança.
-        z = logits.astype(np.float64) * self.escala_logit
+        z = logits.astype(np.float64) / 15
         e = np.exp(z - z.max())
         probs = e / e.sum()
         return ResultadoNPU(classe=int(np.argmax(logits)), logits=[int(v) for v in logits],

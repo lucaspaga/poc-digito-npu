@@ -36,6 +36,7 @@ Mesmo pedido no ChatGPT e no Gemini.
 | Ler a documentação do Expo sobre requisições de rede (Copilot) | A página do Expo Network | Comparando o assunto da página com o pedido | [confirmar na documentação] |
 | Mapa do tema (Gemini) | Disse que o `react-query` cancela automaticamente quando uma nova requisição é disparada | Li Query Cancellation | Por padrão não cancela; é preciso usar o `signal` |
 | Mapa do tema (ChatGPT) | Disse que `useMutation` exige controle próprio contra respostas antigas | Li a página de Mutations | Callbacks do `mutate` só rodam para a última chamada |
+| Adaptar o servidor mantendo o modo --placa (Copilot) | Removeu o `import numpy` e afirmou que o modo continuaria compatível, mas o modo ainda usava `np.argmax` | Revisão do diff, sem executar o modo placa | Manter o import; o `NameError` só apareceria com a placa ligada |
 
 
 ## Limitações
