@@ -1,0 +1,47 @@
+# Diário de pesquisa
+
+## Contexto do TCC
+Plataforma didática com um SoC RISC-V em FPGA e uma NPU que executa uma rede neural para reconhecer dígitos. Hoje a demonstração depende de um programa no computador, e o Digit Tracker já faz inferência ao vivo, mas sem rede entre a interface e a NPU.
+
+## Pergunta de pesquisa
+**Inicial:** Como o `@tanstack/react-query` permite que um app Expo mostre ao vivo a predição da NPU enquanto o usuário desenha um dígito no celular, na condição de as inferências irem pela rede a cada 0,2 s e poderem voltar atrasadas, fora de ordem ou com erro?
+
+**Refinada:** O `@tanstack/react-query` é necessário para manter a predição ao vivo coerente com o desenho atual, na condição de as inferências irem pela rede a cada 0,2 s e voltarem atrasadas, fora de ordem ou com erro, ou `fetch` com `AbortController` e um número de revisão bastam?
+
+
+## O que as IAs disseram
+Mesmo pedido no ChatGPT e no Gemini.
+- **Concordam:** cancelar não é a primeira escolha do `react-query`; as duas apontam `fetch` e `AbortController` como caminho direto.
+- **Divergem:** só o ChatGPT trata o número de revisão como obrigatório, compara `useQuery` e `useMutation` e alerta sobre o Expo Go no SDK 58.
+- **Documentação:** confirmou o limite do Expo Go na App Store e o `AbortSignal`; desmentiu o cancelamento automático citado pelo Gemini.
+
+
+## Alternativas consideradas
+| Opção | Serve para | Funciona no Expo Go? | Decisão |
+|---|---|---|---|
+| `fetch` + `AbortController` | | | |
+| hook próprio `useFetch` | | | |
+| `@tanstack/react-query` | | | |
+
+## Código reaproveitado
+- Servidor e emulação: adaptados de `poc-fashion-npu` (André Maiolini).
+- Pesos int8 e conversão de traços para 28×28: Digit-Tracker (TCC).
+
+## Fontes oficiais lidas
+- [título da página] ([endereço])
+
+## Onde a IA errou
+| O que pedi | O que veio | Como percebi | O que era o certo |
+|---|---|---|---|
+| Ler a documentação do Expo sobre requisições de rede (Copilot) | A página do Expo Network | Comparando o assunto da página com o pedido | [confirmar na documentação] |
+| Mapa do tema (Gemini) | Disse que o `react-query` cancela automaticamente quando uma nova requisição é disparada | Li Query Cancellation | Por padrão não cancela; é preciso usar o `signal` |
+| Mapa do tema (ChatGPT) | Disse que `useMutation` exige controle próprio contra respostas antigas | Li a página de Mutations | Callbacks do `mutate` só rodam para a última chamada |
+
+
+## Limitações
+- A inferência roda em uma emulação, não na NPU real.
+- A documentação do Expo diz que o Expo Go da App Store para no SDK 54, mas este projeto SDK 58 abriu no iPhone sem TestFlight. Não encontrei a explicação; o funcionamento foi verificado no aparelho.
+
+
+## Resultado e próximos passos no TCC
+[o que a prova de conceito demonstrou e o que muda no TCC]
