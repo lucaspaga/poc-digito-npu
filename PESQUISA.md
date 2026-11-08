@@ -55,6 +55,7 @@ Mesmo pedido no ChatGPT e no Gemini.
 | Mapa do tema (Gemini) | Disse que o `react-query` cancela automaticamente quando uma nova requisição é disparada | Li Query Cancellation | Por padrão não cancela; é preciso usar o `signal` |
 | Mapa do tema (ChatGPT) | Disse que `useMutation` exige controle próprio contra respostas antigas | Li a página de Mutations | Callbacks do `mutate` só rodam para a última chamada |
 | Adaptar o servidor mantendo o modo --placa (Copilot) | Removeu o `import numpy` e afirmou que o modo continuaria compatível, mas o modo ainda usava `np.argmax` | Revisão do diff, sem executar o modo placa | Manter o import; o `NameError` só apareceria com a placa ligada |
+| Contar cancelamentos (Copilot) | Identificou o cancelamento só por `erro.name === 'AbortError'`, e o contador ficou em 0 | O valor era impossível com esse atraso; revisão do código e novo teste | Usar `controlador.signal.aborted`; o contador passou a registrar 5, 2 e 7 |
 
 
 ## Limitações
@@ -68,5 +69,14 @@ Mesmo pedido no ChatGPT e no Gemini.
 - O contador "Voltou atrás" chegou a 8 em um único desenho, ou seja, respostas antigas sobrescreveram a predição mais recente.
 - O traço continuou fluido durante os envios.
 - Com atraso fixo de 2 s, ao limpar logo depois de desenhar a predição de uma resposta atrasada apareceu na tela já limpa.
+### Versão com proteção (`fetch`, `AbortController` e número de revisão)
+- Mesma condição: atraso aleatório de 0 a 0,5 s, em 10 desenhos, no iPhone.
+- "Voltou atrás" ficou em [valor], contra até 8 na versão sem proteção.
+- As requisições antigas foram canceladas (5, 2 e 7 em três desenhos) antes de responder, então "Descartadas" ficou em 0.
+- O número "Predição do desenho" não ficou mais de 1 s sem mudar e igualou "Desenho atual" em até 1 s depois de levantar o dedo.
+- Com atraso fixo de 2 s, nada apareceu depois de limpar.
+
+**Resposta parcial:** nessa condição, o `react-query` não foi necessário. O teste não avalia o `react-query` em si, nem atrasos maiores.
+
 
 

@@ -16,14 +16,18 @@ const INTERVALO_INFERENCIA_MS = 200;
 export default function App() {
   const tracosRef = useRef<Tracos>([]);
   const revisaoRef = useRef(0);
+  const desenhoIdRef = useRef(0);
   const ultimaRevisaoEnviadaRef = useRef(0);
   const proximaInferenciaRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ultimaTentativaRef = useRef(0);
+  const controladorRef = useRef<AbortController | null>(null);
   const [revisao, setRevisao] = useState(0);
   const [predicao, setPredicao] = useState<RespostaInferencia | null>(null);
   const predicaoRef = useRef<RespostaInferencia | null>(null);
   const [enviadas, setEnviadas] = useState(0);
   const [erros, setErros] = useState(0);
+  const [descartadas, setDescartadas] = useState(0);
+  const [canceladas, setCanceladas] = useState(0);
   const [voltouAtras, setVoltouAtras] = useState(0);
   const [limparQuandoMudar, setLimparQuandoMudar] = useState(0);
 
@@ -39,8 +43,17 @@ export default function App() {
     ultimaTentativaRef.current = Date.now();
     setEnviadas((valor) => valor + 1);
 
+    if (controladorRef.current !== null) {
+      controladorRef.current.abort();
+    }
+
+    const controlador = new AbortController();
+    const desenhoDoEnvio = desenhoIdRef.current;
+    controladorRef.current = controlador;
+
     const servidor = process.env.EXPO_PUBLIC_SERVIDOR ?? '';
     fetch(`${servidor.replace(/\/$/, '')}/inferir/digito`, {
+      signal: controlador.signal,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ revisao: revisaoParaEnviar, tracos }),
@@ -52,13 +65,38 @@ export default function App() {
         return resposta.json() as Promise<RespostaInferencia>;
       })
       .then((resposta) => {
-        if (predicaoRef.current && resposta.revisao < predicaoRef.current.revisao) {
+        if (desenhoDoEnvio !== desenhoIdRef.current) {
+          return;
+        }
+
+        const revisaoExibida = predicaoRef.current?.revisao ?? 0;
+        if (resposta.revisao < revisaoExibida) {
           setVoltouAtras((valor) => valor + 1);
         }
+        if (resposta.revisao <= revisaoExibida) {
+          setDescartadas((valor) => valor + 1);
+          return;
+        }
+
         predicaoRef.current = resposta;
         setPredicao(resposta);
       })
-      .catch(() => setErros((valor) => valor + 1));
+      .catch((erro: unknown) => {
+        if (controlador.signal.aborted) {
+          if (desenhoDoEnvio === desenhoIdRef.current) {
+            setCanceladas((valor) => valor + 1);
+          }
+          return;
+        }
+        if (desenhoDoEnvio === desenhoIdRef.current) {
+          setErros((valor) => valor + 1);
+        }
+      })
+      .finally(() => {
+        if (controladorRef.current === controlador) {
+          controladorRef.current = null;
+        }
+      });
   }, []);
 
   const agendarInferencia = useCallback(() => {
@@ -110,7 +148,12 @@ export default function App() {
       clearTimeout(proximaInferenciaRef.current);
       proximaInferenciaRef.current = null;
     }
+    if (controladorRef.current !== null) {
+      controladorRef.current.abort();
+      controladorRef.current = null;
+    }
     tracosRef.current = [];
+    desenhoIdRef.current += 1;
     revisaoRef.current = 0;
     ultimaRevisaoEnviadaRef.current = 0;
     setRevisao(0);
@@ -118,6 +161,8 @@ export default function App() {
     setPredicao(null);
     setEnviadas(0);
     setErros(0);
+    setDescartadas(0);
+    setCanceladas(0);
     setVoltouAtras(0);
     setLimparQuandoMudar((valor) => valor + 1);
   };
@@ -139,6 +184,8 @@ export default function App() {
             <Text>Predição do desenho: {predicao?.revisao ?? 0}</Text>
             <Text>Enviadas: {enviadas}</Text>
             <Text>Erros: {erros}</Text>
+            <Text>Descartadas: {descartadas}</Text>
+            <Text>Canceladas: {canceladas}</Text>
             <Text>Voltou atrás: {voltouAtras}</Text>
           </View>
           <View style={styles.botao}>
