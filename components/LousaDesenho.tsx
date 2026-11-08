@@ -13,6 +13,7 @@ export type Traco = Ponto[];
 export type Tracos = Traco[];
 
 type Props = {
+  servidorDisponivel: boolean;
   limparQuandoMudar?: number;
   onTracosChange: (tracos: Tracos) => void;
   onTracoFim: (tracos: Tracos) => void;
@@ -31,6 +32,7 @@ function caminhoDoTraco(traco: Traco): string {
 }
 
 function LousaDesenho({
+  servidorDisponivel,
   limparQuandoMudar = 0,
   onTracosChange,
   onTracoFim,
@@ -39,11 +41,13 @@ function LousaDesenho({
   const tracosRef = useRef<Tracos>([]);
   const callbackRef = useRef(onTracosChange);
   const fimTracoRef = useRef(onTracoFim);
+  const servidorDisponivelRef = useRef(servidorDisponivel);
   const tamanhoRef = useRef({ width: 0, height: 0 });
   const limparAnteriorRef = useRef(limparQuandoMudar);
 
   callbackRef.current = onTracosChange;
   fimTracoRef.current = onTracoFim;
+  servidorDisponivelRef.current = servidorDisponivel;
 
   const atualizarTracos = (proximosTracos: Tracos) => {
     tracosRef.current = proximosTracos;
@@ -82,12 +86,28 @@ function LousaDesenho({
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (event) => iniciarTraco(pontoDoEvento(event)),
-      onPanResponderMove: (event) => adicionarPonto(pontoDoEvento(event)),
-      onPanResponderRelease: () => fimTracoRef.current(tracosRef.current),
-      onPanResponderTerminate: () => fimTracoRef.current(tracosRef.current),
+      onStartShouldSetPanResponder: () => servidorDisponivelRef.current,
+      onMoveShouldSetPanResponder: () => servidorDisponivelRef.current,
+      onPanResponderGrant: (event) => {
+        if (servidorDisponivelRef.current) {
+          iniciarTraco(pontoDoEvento(event));
+        }
+      },
+      onPanResponderMove: (event) => {
+        if (servidorDisponivelRef.current) {
+          adicionarPonto(pontoDoEvento(event));
+        }
+      },
+      onPanResponderRelease: () => {
+        if (servidorDisponivelRef.current) {
+          fimTracoRef.current(tracosRef.current);
+        }
+      },
+      onPanResponderTerminate: () => {
+        if (servidorDisponivelRef.current) {
+          fimTracoRef.current(tracosRef.current);
+        }
+      },
     }),
   ).current;
 
