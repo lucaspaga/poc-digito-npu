@@ -23,17 +23,35 @@ Mesmo pedido no ChatGPT e no Gemini.
 | hook próprio `useFetch` | | | |
 | `@tanstack/react-query` | | | |
 
-## Código reaproveitado
-- Servidor e emulação: adaptados de `poc-fashion-npu` (André Maiolini).
-- Pesos int8 e conversão de traços para 28×28: Digit-Tracker (TCC).
-
 ## Fontes oficiais lidas
-- [título da página] ([endereço])
+
+### Expo
+- Project is incompatible with this version of Expo Go (https://docs.expo.dev/troubleshooting/expo-go-version-mismatch/)
+- Expo Go sign-in required (https://docs.expo.dev/troubleshooting/expo-go-sign-in-required.md)
+- Expo Network, SDK 58 (https://docs.expo.dev/versions/v58.0.0/sdk/network/)
+- react-native-svg, SDK 58 (https://docs.expo.dev/versions/v58.0.0/sdk/svg/)
+- react-native-safe-area-context, SDK 58 (https://docs.expo.dev/versions/v58.0.0/sdk/safe-area-context/)
+
+### React Native
+- Networking (https://reactnative.dev/docs/network)
+- PanResponder (https://reactnative.dev/docs/panresponder)
+
+### React
+- Reusing Logic with Custom Hooks (https://react.dev/learn/reusing-logic-with-custom-hooks)
+
+### TanStack Query
+- Query Cancellation (https://tanstack.com/query/latest/docs/framework/react/guides/query-cancellation)
+- Mutations (https://tanstack.com/query/latest/docs/framework/react/guides/mutations)
+- useMutation (https://tanstack.com/query/latest/docs/framework/react/reference/useMutation)
+
+### MDN
+- AbortController (https://developer.mozilla.org/en-US/docs/Web/API/AbortController)
+
 
 ## Onde a IA errou
 | O que pedi | O que veio | Como percebi | O que era o certo |
 |---|---|---|---|
-| Ler a documentação do Expo sobre requisições de rede (Copilot) | A página do Expo Network | Comparando o assunto da página com o pedido | [confirmar na documentação] |
+| Ler a documentação do Expo sobre requisições de rede (Copilot) | A página do Expo Network | Comparando o assunto da página com o pedido | A página trata do estado da rede do aparelho; ela não ensina a fazer requisições |
 | Mapa do tema (Gemini) | Disse que o `react-query` cancela automaticamente quando uma nova requisição é disparada | Li Query Cancellation | Por padrão não cancela; é preciso usar o `signal` |
 | Mapa do tema (ChatGPT) | Disse que `useMutation` exige controle próprio contra respostas antigas | Li a página de Mutations | Callbacks do `mutate` só rodam para a última chamada |
 | Adaptar o servidor mantendo o modo --placa (Copilot) | Removeu o `import numpy` e afirmou que o modo continuaria compatível, mas o modo ainda usava `np.argmax` | Revisão do diff, sem executar o modo placa | Manter o import; o `NameError` só apareceria com a placa ligada |
