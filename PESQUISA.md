@@ -19,9 +19,9 @@ Mesmo pedido no ChatGPT e no Gemini.
 ## Alternativas consideradas
 | Opção | Serve para | Funciona no Expo Go? | Decisão |
 |---|---|---|---|
-| `fetch` + `AbortController` | | | |
-| hook próprio `useFetch` | | | |
-| `@tanstack/react-query` | | | |
+| `fetch` + `AbortController` | Enviar e cancelar requisições, com um número de revisão feito à mão | Sim, testado no iPhone | **Sim:** sem dependências e atendeu aos critérios |
+| hook próprio `useFetch` | Organizar a mesma lógica para reutilizá-la | Não testado; seria código React, sem pacote novo | Não: há uma tela só, e a organização não muda o resultado |
+| `@tanstack/react-query` | Cache, novas tentativas e estado de dados remotos | Não testado | Plano B, não foi necessário |
 
 ## Fontes oficiais lidas
 
@@ -63,6 +63,9 @@ Mesmo pedido no ChatGPT e no Gemini.
 ## Limitações
 - A inferência roda em uma emulação, não na NPU real.
 - A documentação do Expo diz que o Expo Go da App Store para no SDK 54, mas este projeto SDK 58 abriu no iPhone sem TestFlight. Não encontrei a explicação; o funcionamento foi verificado no aparelho.
+- O modo `--placa` não foi executado nesta PoC, e os tempos medidos não incluem a FPGA real.
+- O teste usou um único iPhone e 10 desenhos, com atrasos aleatórios de até 0,5 s.
+- A emulação usa o arredondamento da PPU, mas não foi comparada bit a bit com a placa.
 
 
 ## Resultado e próximos passos no TCC
@@ -73,12 +76,16 @@ Mesmo pedido no ChatGPT e no Gemini.
 - Com atraso fixo de 2 s, ao limpar logo depois de desenhar a predição de uma resposta atrasada apareceu na tela já limpa.
 ### Versão com proteção (`fetch`, `AbortController` e número de revisão)
 - Mesma condição: atraso aleatório de 0 a 0,5 s, em 10 desenhos, no iPhone.
-- "Voltou atrás" ficou em [valor], contra até 8 na versão sem proteção.
+- "Voltou atrás" ficou em 0, contra até 8 na versão sem proteção.
 - As requisições antigas foram canceladas (5, 2 e 7 em três desenhos) antes de responder, então "Descartadas" ficou em 0.
 - O número "Predição do desenho" não ficou mais de 1 s sem mudar e igualou "Desenho atual" em até 1 s depois de levantar o dedo.
 - Com atraso fixo de 2 s, nada apareceu depois de limpar.
 
-**Resposta parcial:** nessa condição, o `react-query` não foi necessário. O teste não avalia o `react-query` em si, nem atrasos maiores.
+**Resposta à pergunta:** nessa condição, `fetch` com `AbortController` e um número de revisão bastaram, e o `@tanstack/react-query` não foi necessário. Antes da proteção, respostas antigas sobrescreveram a predição até 8 vezes em um desenho e reapareceram depois de limpar; depois dela, isso não aconteceu mais. A conclusão não significa que o `react-query` seja pior, porque ele não foi testado, nem vale para atrasos maiores que os do teste.
+
+### Próximos passos no TCC
+- Testar o app com a placa real pelo modo `--placa` e medir a latência do celular até a NPU.
+- Usar o app na demonstração da plataforma, como cliente sem fio.
 
 
 

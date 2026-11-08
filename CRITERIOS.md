@@ -23,10 +23,10 @@ Com atraso: servidor atrasando cada resposta entre 0 e 0,5s, repetido em 10 dese
 - [x] Em caso de falha, aviso aparece na uma mensagem na tela e a ultima previsao fica estatica até que as inferencias voltem a funcionar.
 
 ## Etapa 5: UI
-- [ ] A lousa está bem visível e com um tamanho adequado.
-- [ ] Tudo cabe proporcinalmente na tela do celular, sem rolagem.
-- [ ] Os valores são facilmente identificados.
-- [ ] Tudo o que funcionava continua funcionando.
+- [x] A lousa está bem visível e com um tamanho adequado.
+- [x] Tudo cabe proporcinalmente na tela do celular, sem rolagem.
+- [x] Os valores são facilmente identificados.
+- [x] Tudo o que funcionava continua funcionando.
 
-**Verificado em:** ( ) aparelho físico ( ) emulador
-**Resultado:** ( ) passou ( ) reprovou
+**Verificado em:** (x) aparelho físico ( ) emulador
+**Resultado:** (x) passou ( ) reprovou
