@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import {
   GestureResponderEvent,
   LayoutChangeEvent,
@@ -15,6 +15,7 @@ export type Tracos = Traco[];
 type Props = {
   limparQuandoMudar?: number;
   onTracosChange: (tracos: Tracos) => void;
+  onTracoFim: (tracos: Tracos) => void;
 };
 
 function caminhoDoTraco(traco: Traco): string {
@@ -29,14 +30,20 @@ function caminhoDoTraco(traco: Traco): string {
   ].join(' ');
 }
 
-export default function LousaDesenho({ limparQuandoMudar = 0, onTracosChange }: Props) {
+function LousaDesenho({
+  limparQuandoMudar = 0,
+  onTracosChange,
+  onTracoFim,
+}: Props) {
   const [tracos, setTracos] = useState<Tracos>([]);
   const tracosRef = useRef<Tracos>([]);
   const callbackRef = useRef(onTracosChange);
+  const fimTracoRef = useRef(onTracoFim);
   const tamanhoRef = useRef({ width: 0, height: 0 });
   const limparAnteriorRef = useRef(limparQuandoMudar);
 
   callbackRef.current = onTracosChange;
+  fimTracoRef.current = onTracoFim;
 
   const atualizarTracos = (proximosTracos: Tracos) => {
     tracosRef.current = proximosTracos;
@@ -79,8 +86,8 @@ export default function LousaDesenho({ limparQuandoMudar = 0, onTracosChange }: 
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (event) => iniciarTraco(pontoDoEvento(event)),
       onPanResponderMove: (event) => adicionarPonto(pontoDoEvento(event)),
-      onPanResponderRelease: () => undefined,
-      onPanResponderTerminate: () => undefined,
+      onPanResponderRelease: () => fimTracoRef.current(tracosRef.current),
+      onPanResponderTerminate: () => fimTracoRef.current(tracosRef.current),
     }),
   ).current;
 
@@ -132,6 +139,8 @@ export default function LousaDesenho({ limparQuandoMudar = 0, onTracosChange }: 
     </View>
   );
 }
+
+export default memo(LousaDesenho);
 
 const styles = StyleSheet.create({
   lousa: {

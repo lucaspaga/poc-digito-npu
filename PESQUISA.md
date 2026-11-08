@@ -63,4 +63,10 @@ Mesmo pedido no ChatGPT e no Gemini.
 
 
 ## Resultado e próximos passos no TCC
-[o que a prova de conceito demonstrou e o que muda no TCC]
+### Versão sem proteção
+- Condição: servidor com atraso aleatório de 0 a 0,5 s, em 10 desenhos, no iPhone.
+- O contador "Voltou atrás" chegou a 8 em um único desenho, ou seja, respostas antigas sobrescreveram a predição mais recente.
+- O traço continuou fluido durante os envios.
+- Com atraso fixo de 2 s, ao limpar logo depois de desenhar a predição de uma resposta atrasada apareceu na tela já limpa.
+
+
