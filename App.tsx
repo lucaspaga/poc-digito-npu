@@ -192,7 +192,9 @@ export default function App() {
         throw new Error('status-invalido');
       }
       setServidorDisponivel(true);
-      setMensagem(null);
+      setMensagem((valor) => (
+        valor === 'Falha de comunicação com o servidor!' ? null : valor
+      ));
       if (intervaloStatusRef.current === null) {
         intervaloStatusRef.current = setInterval(consultarStatus, INTERVALO_STATUS_MS);
       }
@@ -218,6 +220,7 @@ export default function App() {
     return () => {
       if (intervaloStatusRef.current !== null) {
         clearInterval(intervaloStatusRef.current);
+        intervaloStatusRef.current = null;
       }
       controladorStatusRef.current?.abort();
       if (proximaInferenciaRef.current !== null) {
@@ -265,34 +268,54 @@ export default function App() {
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <View style={styles.conteudo}>
+          <View style={styles.statusServidor}>
+            <Text style={styles.titulo}>Dígito NPU</Text>
+            <View style={styles.statusIndicador}>
+              <View
+                style={[
+                  styles.led,
+                  servidorDisponivel ? styles.ledLigado : styles.ledDesligado,
+                ]}
+              />
+              <Text style={styles.statusTexto}>
+                {servidorDisponivel ? 'Servidor ligado' : 'Servidor desligado'}
+              </Text>
+            </View>
+          </View>
           <LousaDesenho
             servidorDisponivel={servidorDisponivel}
             limparQuandoMudar={limparQuandoMudar}
             onTracosChange={aoMudarTracos}
             onTracoFim={aoTerminarTraco}
           />
-          <View style={styles.statusServidor}>
-            <View
-              style={[
-                styles.led,
-                servidorDisponivel ? styles.ledLigado : styles.ledDesligado,
-              ]}
-            />
-            <Text>{servidorDisponivel ? 'Servidor ligado' : 'Servidor desligado'}</Text>
-          </View>
           <View style={styles.informacoes}>
-            <Text>Predição: {predicao?.classe ?? '-'}</Text>
-            <Text>Confiança: {predicao ? `${(predicao.confianca * 100).toFixed(1)}%` : '-'}</Text>
-            <Text>Origem: {predicao?.origem ?? '-'}</Text>
-            <Text>Desenho atual: {revisao}</Text>
-            <Text>Predição do desenho: {predicao?.revisao ?? 0}</Text>
-            <Text>Enviadas: {enviadas}</Text>
-            <Text>Erros: {erros}</Text>
-            <Text>Descartadas: {descartadas}</Text>
-            <Text>Canceladas: {canceladas}</Text>
-            <Text>Voltou atrás: {voltouAtras}</Text>
-            {mensagem ? <Text style={styles.mensagem}>{mensagem}</Text> : null}
+            <View style={styles.predicaoBloco}>
+              <Text style={styles.rotulo}>PREDIÇÃO</Text>
+              <Text style={styles.predicao}>{predicao?.classe ?? '-'}</Text>
+              <Text style={styles.confianca}>
+                {predicao ? `${(predicao.confianca * 100).toFixed(1)}%` : '-'} confiança
+              </Text>
+              <Text style={styles.origem}>Origem: {predicao?.origem ?? '-'}</Text>
+            </View>
+            <View style={styles.revisoes}>
+              <View style={styles.revisaoItem}>
+                <Text style={styles.rotulo}>Desenho atual</Text>
+                <Text style={styles.valor}>{revisao}</Text>
+              </View>
+              <View style={styles.revisaoItem}>
+                <Text style={styles.rotulo}>Predição do desenho</Text>
+                <Text style={styles.valor}>{predicao?.revisao ?? 0}</Text>
+              </View>
+            </View>
+            <View style={styles.contadores}>
+              <Text style={styles.contador}>Enviadas {enviadas}</Text>
+              <Text style={styles.contador}>Canceladas {canceladas}</Text>
+              <Text style={styles.contador}>Descartadas {descartadas}</Text>
+              <Text style={styles.contador}>Erros {erros}</Text>
+              <Text style={styles.contador}>Voltou atrás {voltouAtras}</Text>
+            </View>
           </View>
+          {mensagem ? <Text style={styles.mensagem}>{mensagem}</Text> : null}
           <View style={styles.botao}>
             <Button onPress={limpar} title="Limpar" />
             {!servidorDisponivel ? (
@@ -309,36 +332,122 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#071525',
   },
   conteudo: {
     flex: 1,
-    gap: 16,
-    padding: 16,
+    gap: 10,
+    padding: 14,
   },
   botao: {
-    alignSelf: 'stretch',
+    gap: 6,
   },
-  informacoes: {
-    gap: 4,
+  titulo: {
+    color: '#F3F8FF',
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: 0,
+  },
+  statusIndicador: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 7,
+  },
+  statusTexto: {
+    color: '#AFC4D8',
+    fontSize: 12,
   },
   statusServidor: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 8,
+    justifyContent: 'space-between',
+    minHeight: 34,
   },
   led: {
     borderRadius: 8,
-    height: 16,
-    width: 16,
+    height: 14,
+    width: 14,
   },
   ledLigado: {
-    backgroundColor: '#22A447',
+    backgroundColor: '#35D07F',
   },
   ledDesligado: {
-    backgroundColor: '#D93434',
+    backgroundColor: '#FF4D5E',
+  },
+  informacoes: {
+    gap: 8,
+  },
+  predicaoBloco: {
+    alignItems: 'center',
+    backgroundColor: '#0D2944',
+    borderColor: '#164D7A',
+    borderRadius: 10,
+    borderWidth: 1,
+    minHeight: 96,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  rotulo: {
+    color: '#77B7E8',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+  },
+  predicao: {
+    color: '#F5FAFF',
+    fontSize: 34,
+    fontWeight: '800',
+    lineHeight: 38,
+  },
+  confianca: {
+    color: '#C9E6FF',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  origem: {
+    color: '#89A8C2',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  revisoes: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  revisaoItem: {
+    backgroundColor: '#0B2036',
+    borderColor: '#173B5B',
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  valor: {
+    color: '#F3F8FF',
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  contadores: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+    justifyContent: 'space-between',
+  },
+  contador: {
+    color: '#AFC4D8',
+    fontSize: 11,
+    width: '31%',
   },
   mensagem: {
-    color: '#B42318',
+    backgroundColor: '#461C27',
+    borderColor: '#D9465F',
+    borderRadius: 7,
+    borderWidth: 1,
+    color: '#FFD6DC',
+    fontSize: 12,
+    fontWeight: '600',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
   },
 });

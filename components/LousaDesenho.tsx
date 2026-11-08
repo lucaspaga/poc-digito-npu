@@ -137,7 +137,7 @@ function LousaDesenho({
             d={caminhoDoTraco(traco)}
             key={indice}
             fill="none"
-            stroke="#16324F"
+            stroke="#39B9FF"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={12}
@@ -149,7 +149,7 @@ function LousaDesenho({
             <Circle
               cx={ponto[0]}
               cy={ponto[1]}
-              fill="#16324F"
+              fill="#39B9FF"
               key={`ponto-${indice}`}
               r={6}
             />
@@ -164,8 +164,8 @@ export default memo(LousaDesenho);
 
 const styles = StyleSheet.create({
   lousa: {
-    backgroundColor: '#F3F6F8',
-    borderColor: '#B9C7D3',
+    backgroundColor: '#0A1D30',
+    borderColor: '#28648F',
     borderRadius: 12,
     borderWidth: 1,
     flex: 1,

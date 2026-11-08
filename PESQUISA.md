@@ -56,6 +56,8 @@ Mesmo pedido no ChatGPT e no Gemini.
 | Mapa do tema (ChatGPT) | Disse que `useMutation` exige controle próprio contra respostas antigas | Li a página de Mutations | Callbacks do `mutate` só rodam para a última chamada |
 | Adaptar o servidor mantendo o modo --placa (Copilot) | Removeu o `import numpy` e afirmou que o modo continuaria compatível, mas o modo ainda usava `np.argmax` | Revisão do diff, sem executar o modo placa | Manter o import; o `NameError` só apareceria com a placa ligada |
 | Contar cancelamentos (Copilot) | Identificou o cancelamento só por `erro.name === 'AbortError'`, e o contador ficou em 0 | O valor era impossível com esse atraso; revisão do código e novo teste | Usar `controlador.signal.aborted`; o contador passou a registrar 5, 2 e 7 |
+| Apagar a mensagem de falha ao reconectar (Copilot) | Apagou todas as mensagens a cada consulta bem-sucedida, e as de erro sumiam em até 2 s | Testando no celular depois da mudança visual | Apagar só a mensagem de falha de comunicação |
+| Parar e reiniciar a consulta ao servidor (Copilot) | Não zerou a referência do intervalo, e o LED parava de atualizar depois de um Fast Refresh | Testando no celular e lendo o código | Zerar a referência na limpeza do efeito |
 
 
 ## Limitações
