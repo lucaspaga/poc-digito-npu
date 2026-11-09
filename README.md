@@ -97,8 +97,6 @@ O app foi feito com o **GitHub Copilot em modo Agent**, conectado ao servidor MC
 
 **Uso de IA fora do agente:** o Claude Code ajudou a planejar as etapas, redigir prompts e documentos e revisar diffs. ChatGPT e Gemini fizeram o mapa do tema. Os erros das ferramentas, e como foram percebidos, estão em "Onde a IA errou", no `PESQUISA.md`.
 
-**Código reaproveitado:** o servidor foi adaptado da [`poc-fashion-npu`](https://github.com/Nyfeu/poc-fashion-npu), de André Maiolini. Os pesos int8 e a conversão dos traços vêm do [`Digit-Tracker`](https://github.com/RISC-V-Azedinha/Digit-Tracker), do TCC.
-
 ## Limites
 
 - A inferência roda em uma emulação. O modo `--placa` existe no servidor, mas não foi executado nesta PoC, e os tempos não incluem a FPGA real.
